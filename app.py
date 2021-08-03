@@ -7,13 +7,14 @@ from flask_jwt import JWT, jwt_required, current_identity
 
 
 class User(object):
-    def __init__(self,id, username, password):
+    def __init__(self, id, username, password):
         self.id = id
         self.username = username
         self.password = password
 
+
 def fetch_users():
-    with sqlite3.connect('flask_EOMP.db') as conn:
+    with sqlite3.connect('practice.db') as conn:
         cursor = conn.cursor()
         cursor.execute('SELECT * FROM register')
         users = cursor.fetchall()
@@ -29,7 +30,7 @@ users = fetch_users()
 
 
 def user_table():
-    conn = sqlite3.connect('flask_EOMP.db')
+    conn = sqlite3.connect('practice.db')
     print("Database Opened")
 
     conn.execute("CREATE TABLE IF NOT EXISTS register(user_id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -44,16 +45,18 @@ def user_table():
 
 
 def product_table():
-    conn = sqlite3.connect('flask_EOMP.db')
+    conn = sqlite3.connect('practice.db')
     conn.execute("CREATE TABLE IF NOT EXISTS product(product_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                  "product_name TEXT NOT NULL,"
                  "description TEXT NOT NULL,"
                  "price TEXT NOT NULL,"
                  "product_image BLOB NOT NULL)")
+    print('Product table Created')
 
 
 user_table()
 product_table()
+
 
 username_table = {u.username: u for u in users}
 userid_table = {u.id: u for u in users}
@@ -96,7 +99,7 @@ def register():
         username = request.form['username']
         password = request.form['password']
 
-        with sqlite3.connect('flask_EOMP.db') as conn:
+        with sqlite3.connect('practice.db') as conn:
             cursor = conn.cursor()
             cursor.execute('INSERT INTO register('
                            'name,'
@@ -115,7 +118,7 @@ def register():
 def get_blogs():
     response = {}
 
-    with sqlite3.connect('flask_EOMP.db') as conn:
+    with sqlite3.connect('practice.db') as conn:
         cursor = conn.cursor()
         cursor.execute('SELECT * FROM product')
 
@@ -136,25 +139,26 @@ def add_product():
         price = request.form['price']
         product_image = request.form['product_image']
 
-        with sqlite3.connect('flask_EOMP.db') as conn:
+        with sqlite3.connect('practice.db') as conn:
             cursor = conn.cursor()
             cursor.execute('INSERT INTO product('
                            'product_name,'
                            'description,'
                            'price,'
-                           'product_image,) VALUES(?,?,?,?)', (product_name, description, price, product_image))
+                           'product_image,) VALUES(?,?,?,?)', (product_name, description, 'R' + price, product_image))
             conn.commit()
             response['status_code'] = 201
             response['description'] = 'New Product Has Been Added'
         return response
 
+
 @app.route('/view-product/<int:product_id>', methods=['GET'])
 def view_product(product_id):
     response = {}
 
-    with sqlite3.connect('flask_EOMP.db') as conn:
+    with sqlite3.connect('practice.db') as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM product WHERE produt_id='+ str(product_id))
+        cursor.execute('SELECT * FROM product WHERE product_id=' + str(product_id))
 
         response['status_code'] = 200
         response['description'] = 'Product Successfully Retrieved'
@@ -162,19 +166,20 @@ def view_product(product_id):
 
     return jsonify(response)
 
+
 @app.route('/edit-product/<int:product_id>', methods=['PUT'])
 def edit_product(product_id):
     response = {}
 
     if request.method == 'PUT':
-        with sqlite3.connect('flask_EOMP.db') as conn:
+        with sqlite3.connect('practice.db') as conn:
             incoming_data = dict(request.json)
             put_data = {}
 
             if incoming_data.get('product_name') is not None:
                 put_data['product_name'] = incoming_data.get('product_name')
 
-                with sqlite3.connect('flask_EOMP.db') as conn:
+                with sqlite3.connect('practice.db') as conn:
                     cursor = conn.cursor()
                     cursor.execute('UPDATE product SET product_name =? WHERE product_id=?', (put_data['product_name'], product_id))
                     conn.commit()
@@ -184,7 +189,7 @@ def edit_product(product_id):
             if incoming_data.get('description') is not None:
                 put_data['description'] = incoming_data.get('description')
 
-                with sqlite3.connect('flask_EOMP.db') as conn:
+                with sqlite3.connect('practice.db') as conn:
                     cursor = conn.cursor()
                     cursor.execute('UPDATE product SET description =? WHERE product_id=?', (put_data['description'], product_id))
                     conn.commit()
@@ -194,7 +199,7 @@ def edit_product(product_id):
             if incoming_data.get('price') is not None:
                 put_data['price'] = incoming_data.get('price')
 
-                with sqlite3.connect('flask_EOMP.db') as conn:
+                with sqlite3.connect('practice.db') as conn:
                     cursor = conn.cursor()
                     cursor.execute('UPDATE product SET price =? WHERE product_id=?', (put_data['price'], product_id))
                     conn.commit()
@@ -204,7 +209,7 @@ def edit_product(product_id):
             if incoming_data.get('product_image') is not None:
                 put_data['product_image'] = incoming_data.get('product_image')
 
-                with sqlite3.connect('flask_EOMP.db') as conn:
+                with sqlite3.connect('practice.db') as conn:
                     cursor = conn.cursor()
                     cursor.execute('UPDATE product SET product_image =? WHERE product_id=?', (put_data['product_image'], product_id))
                     conn.commit()
@@ -217,10 +222,13 @@ def edit_product(product_id):
 def delete_product(product_id):
     response = {}
 
-    with sqlite3.connect('flask_EOMP.db') as conn:
+    with sqlite3.connect('practice.db') as conn:
         cursor = conn.cursor()
         cursor.execute('DELETE FROM product WHERE product_id=' + str(product_id))
         conn.commit()
         response['status_code'] = 204
         response['message'] = 'Product Has Been Deleted'
     return response
+
+if __name__ == '__main__':
+    app.run()
