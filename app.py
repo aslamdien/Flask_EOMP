@@ -49,17 +49,25 @@ def product_table():
     conn.execute("CREATE TABLE IF NOT EXISTS product(product_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                  "product_name TEXT NOT NULL,"
                  "description TEXT NOT NULL,"
-                 "price TEXT NOT NULL,"
+                 "price TEXT NOT NULL"
                  "product_image BLOB NOT NULL)")
     print('Product table Created')
+    conn.close()
 
 
 user_table()
 product_table()
 
-
 username_table = {u.username: u for u in users}
 userid_table = {u.id: u for u in users}
+
+
+def convertToBinaryData(filename):
+    # Convert digital data to binary format
+    with open(filename, 'rb') as file:
+        photo = file.read()
+    return photo
+
 
 
 def authenticate(username, password):
@@ -77,6 +85,12 @@ app = Flask(__name__)
 CORS(app)
 app.debug = True
 app.config['SECRET_KEY'] = 'super-secret'
+app.config['MAIL_SERVER'] = 'stmp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USERNAME'] = 'aslamdien90@gamil.com'
+app.config['MAIL_PASSWORD'] = 'nitrocharge'
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
 
 jwt = JWT(app, authenticate, identity)
 
@@ -118,15 +132,19 @@ def register():
 def get_blogs():
     response = {}
 
-    with sqlite3.connect('practice.db') as conn:
+    with sqlite3.connect('practice1.db') as conn:
         cursor = conn.cursor()
+        cursor.row_factory = sqlite3.Row
         cursor.execute('SELECT * FROM product')
 
         product = cursor.fetchall()
+        data = []
+
+        for i in product:
+            data.append({u: i[u] for u in i.keys()})
 
     response['status_code'] = 200
-    response['data'] = product
-    return response
+    return jsonify(data, response)
 
 
 @app.route('/add-product/', methods=['POST'])
@@ -137,15 +155,14 @@ def add_product():
         product_name = request.form['product_name']
         description = request.form['description']
         price = request.form['price']
-        product_image = request.form['product_image']
+        product_image = request.files['product_image']
 
         with sqlite3.connect('practice.db') as conn:
             cursor = conn.cursor()
-            cursor.execute('INSERT INTO product('
-                           'product_name,'
-                           'description,'
+            cursor.execute('INSERT INTO product(product_name, '
+                           'description, '
                            'price,'
-                           'product_image,) VALUES(?,?,?,?)', (product_name, description, 'R' + price, product_image))
+                           'product_image) VALUES(?,?,?,?)', (product_name, description, str('R') + price, product_image))
             conn.commit()
             response['status_code'] = 201
             response['description'] = 'New Product Has Been Added'
@@ -181,7 +198,8 @@ def edit_product(product_id):
 
                 with sqlite3.connect('practice.db') as conn:
                     cursor = conn.cursor()
-                    cursor.execute('UPDATE product SET product_name =? WHERE product_id=?', (put_data['product_name'], product_id))
+                    cursor.execute('UPDATE product SET product_name =? WHERE product_id=?',
+                                   (put_data['product_name'], product_id))
                     conn.commit()
                     response['message'] = 'Product Name Updated Successfully'
                     response['status_code'] = 200
@@ -191,7 +209,8 @@ def edit_product(product_id):
 
                 with sqlite3.connect('practice.db') as conn:
                     cursor = conn.cursor()
-                    cursor.execute('UPDATE product SET description =? WHERE product_id=?', (put_data['description'], product_id))
+                    cursor.execute('UPDATE product SET description =? WHERE product_id=?',
+                                   (put_data['description'], product_id))
                     conn.commit()
                     response['message'] = 'Item Description Updated Successfully'
                     response['status_code'] = 200
@@ -211,7 +230,8 @@ def edit_product(product_id):
 
                 with sqlite3.connect('practice.db') as conn:
                     cursor = conn.cursor()
-                    cursor.execute('UPDATE product SET product_image =? WHERE product_id=?', (put_data['product_image'], product_id))
+                    cursor.execute('UPDATE product SET product_image =? WHERE product_id=?',
+                                   (put_data['product_image'], product_id))
                     conn.commit()
                     response['message'] = 'Product Image Updated Successfully'
                     response['status_code'] = 200
@@ -229,6 +249,7 @@ def delete_product(product_id):
         response['status_code'] = 204
         response['message'] = 'Product Has Been Deleted'
     return response
+
 
 if __name__ == '__main__':
     app.run()
