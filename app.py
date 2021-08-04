@@ -1,7 +1,9 @@
 import hmac
 import sqlite3
+import datetime
 
 from flask_cors import CORS
+from flask_mail import Mail, Message
 from flask import Flask, request, jsonify, render_template
 from flask_jwt import JWT, jwt_required, current_identity
 
@@ -29,6 +31,13 @@ def fetch_users():
 users = fetch_users()
 
 
+def convertToBinaryData(filename):
+    # Convert digital data to binary format
+    with open(filename, 'rb') as file:
+        photo = file.read()
+    return photo
+
+
 def user_table():
     conn = sqlite3.connect('practice.db')
     print("Database Opened")
@@ -45,11 +54,11 @@ def user_table():
 
 
 def product_table():
-    conn = sqlite3.connect('practice.db')
-    conn.execute("CREATE TABLE IF NOT EXISTS product(product_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    conn = sqlite3.connect('practice2.db')
+    conn.execute("CREATE TABLE IF NOT EXISTS product1(product_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                  "product_name TEXT NOT NULL,"
                  "description TEXT NOT NULL,"
-                 "price TEXT NOT NULL"
+                 "price TEXT NOT NULL,"
                  "product_image BLOB NOT NULL)")
     print('Product table Created')
     conn.close()
@@ -60,14 +69,6 @@ product_table()
 
 username_table = {u.username: u for u in users}
 userid_table = {u.id: u for u in users}
-
-
-def convertToBinaryData(filename):
-    # Convert digital data to binary format
-    with open(filename, 'rb') as file:
-        photo = file.read()
-    return photo
-
 
 
 def authenticate(username, password):
@@ -85,12 +86,15 @@ app = Flask(__name__)
 CORS(app)
 app.debug = True
 app.config['SECRET_KEY'] = 'super-secret'
-app.config['MAIL_SERVER'] = 'stmp.gmail.com'
+app.config["JWT_EXPIRATION_DELTA"] = datetime.timedelta(days=1)
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
-app.config['MAIL_USERNAME'] = 'aslamdien90@gamil.com'
+app.config['MAIL_USERNAME'] = 'aslamdien90@gmail.com'
 app.config['MAIL_PASSWORD'] = 'nitrocharge'
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
+mail = Mail(app)
 
 jwt = JWT(app, authenticate, identity)
 
@@ -125,6 +129,10 @@ def register():
             conn.commit()
             response['description'] = 'Registration Successful'
             response['status_code'] = 201
+
+            msg = Message('Welcome To My Point Of Sale', sender='aslamdien90@gmail.com', recipients=[email])
+            msg.body = "Thank You for registering with us " + name + ". Don't forget your Username: " + username + " and Password: " + password + "."
+            mail.send(msg)
         return response
 
 
@@ -132,7 +140,7 @@ def register():
 def get_blogs():
     response = {}
 
-    with sqlite3.connect('practice1.db') as conn:
+    with sqlite3.connect('practice.db') as conn:
         cursor = conn.cursor()
         cursor.row_factory = sqlite3.Row
         cursor.execute('SELECT * FROM product')
@@ -157,10 +165,10 @@ def add_product():
         price = request.form['price']
         product_image = request.files['product_image']
 
-        with sqlite3.connect('practice.db') as conn:
+        with sqlite3.connect('practice2.db') as conn:
             cursor = conn.cursor()
-            cursor.execute('INSERT INTO product(product_name, '
-                           'description, '
+            cursor.execute('INSERT INTO product1(product_name,'
+                           'description,'
                            'price,'
                            'product_image) VALUES(?,?,?,?)', (product_name, description, str('R') + price, product_image))
             conn.commit()
