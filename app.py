@@ -1,10 +1,12 @@
 import hmac
 import sqlite3
-import datetime
+from datetime import datetime, timedelta
+import re
+import rsaidnumber
 
 from flask_cors import CORS
 from flask_mail import Mail, Message
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, redirect
 from flask_jwt import JWT, jwt_required, current_identity
 
 
@@ -31,8 +33,8 @@ def fetch_users():
 users = fetch_users()
 
 
-def convertToBinaryData(filename):
-    # Convert digital data to binary format
+def convertToBinaryData():
+    filename = '...'# Convert digital data to binary format
     with open(filename, 'rb') as file:
         photo = file.read()
     return photo
@@ -55,11 +57,11 @@ def user_table():
 
 def product_table():
     conn = sqlite3.connect('practice2.db')
-    conn.execute("CREATE TABLE IF NOT EXISTS product1(product_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    conn.execute("CREATE TABLE IF NOT EXISTS product2(product_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                  "product_name TEXT NOT NULL,"
                  "description TEXT NOT NULL,"
                  "price TEXT NOT NULL,"
-                 "product_image BLOB NOT NULL)")
+                 "product_image TEXT NOT NULL)")
     print('Product table Created')
     conn.close()
 
@@ -86,7 +88,7 @@ app = Flask(__name__)
 CORS(app)
 app.debug = True
 app.config['SECRET_KEY'] = 'super-secret'
-app.config["JWT_EXPIRATION_DELTA"] = datetime.timedelta(days=1)
+app.config["JWT_EXPIRATION_DELTA"] = timedelta(hours=24)
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
@@ -109,6 +111,8 @@ def protected():
 def register():
     response = {}
 
+    regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+
     if request.method == 'POST':
         name = request.form['name']
         surname = request.form['surname']
@@ -117,23 +121,40 @@ def register():
         username = request.form['username']
         password = request.form['password']
 
-        with sqlite3.connect('practice.db') as conn:
-            cursor = conn.cursor()
-            cursor.execute('INSERT INTO register('
-                           'name,'
-                           'surname,'
-                           'id_number,'
-                           'email,'
-                           'username,'
-                           'password) VALUES(?,?,?,?,?,?)', (name, surname, id_number, email, username, password))
-            conn.commit()
-            response['description'] = 'Registration Successful'
-            response['status_code'] = 201
+        if re.search(regex, email):
+            try:
+                id_number = rsaidnumber.parse(id_number)
+                age = str((datetime.today() - id_number.date_of_birth) // timedelta(365.25))
 
-            msg = Message('Welcome To My Point Of Sale', sender='aslamdien90@gmail.com', recipients=[email])
-            msg.body = "Thank You for registering with us " + name + ". Don't forget your Username: " + username + " and Password: " + password + "."
-            mail.send(msg)
-        return response
+                if int(age) >= 18:
+                    with sqlite3.connect('practice.db') as conn:
+                        cursor = conn.cursor()
+                        cursor.execute('INSERT INTO register('
+                                       'name,'
+                                       'surname,'
+                                       'id_number,'
+                                       'email,'
+                                       'username,'
+                                       'password) VALUES(?,?,?,?,?,?)', (name, surname, id_number, email, username, password))
+                        conn.commit()
+
+                        msg = Message('Welcome To My Point Of Sale', sender='aslamdien90@gmail.com', recipients=[email])
+                        msg.subject = 'New User'
+                        msg.body = "Thank You for registering with us " + name + "."
+                        msg.body = "Don't forget your Username: " + username + " and Password: " + password + "."
+                        mail.send(msg)
+                        response['description'] = 'Registration Successful'
+                        response['status_code'] = 201
+
+                elif int(age) < 18:
+                        year = str(int(age) - 18)
+                        response['message']="Sorry", "Your Are Too Young to Play. Please Try Again In " + year + " Year(s)"
+                else:
+                    response['message'] = 'Email Invalid, Please Valid Email Address'
+            except ValueError:
+                if id_number != int:
+                    response['message'] = "This Is Not An ID Number"
+            return response
 
 
 @app.route('/show-products/', methods=['GET'])
@@ -167,10 +188,7 @@ def add_product():
 
         with sqlite3.connect('practice2.db') as conn:
             cursor = conn.cursor()
-            cursor.execute('INSERT INTO product1(product_name,'
-                           'description,'
-                           'price,'
-                           'product_image) VALUES(?,?,?,?)', (product_name, description, str('R') + price, product_image))
+            cursor.execute('INSERT INTO product2(product_name, description, price, product_image) VALUES(?,?,?,?)', (product_name, description, str('R') + price, product_image))
             conn.commit()
             response['status_code'] = 201
             response['description'] = 'New Product Has Been Added'
