@@ -6,7 +6,7 @@ import rsaidnumber
 
 from flask_cors import CORS
 from flask_mail import Mail, Message
-from flask import Flask, request, jsonify, render_template, redirect
+from flask import Flask, request, jsonify
 from flask_jwt import JWT, jwt_required, current_identity
 
 
@@ -41,7 +41,7 @@ def convertToBinaryData():
 
 
 def user_table():
-    conn = sqlite3.connect('practice.db')
+    conn = sqlite3.connect('flask_EOMP.db')
     print("Database Opened")
 
     conn.execute("CREATE TABLE IF NOT EXISTS register(user_id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -127,7 +127,7 @@ def register():
                 age = str((datetime.today() - id_number.date_of_birth) // timedelta(365.25))
 
                 if int(age) >= 18:
-                    with sqlite3.connect('practice.db') as conn:
+                    with sqlite3.connect('flask_EOMP.db') as conn:
                         cursor = conn.cursor()
                         cursor.execute('INSERT INTO register('
                                        'name,'
@@ -186,7 +186,7 @@ def add_product():
         price = request.form['price']
         product_image = request.files['product_image']
 
-        with sqlite3.connect('practice2.db') as conn:
+        with sqlite3.connect('flask_EOMP.db') as conn:
             cursor = conn.cursor()
             cursor.execute('INSERT INTO product2(product_name, description, price, product_image) VALUES(?,?,?,?)', (product_name, description, str('R') + price, product_image))
             conn.commit()
