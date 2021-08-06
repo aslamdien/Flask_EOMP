@@ -10,6 +10,7 @@ from flask import Flask, request, jsonify
 from flask_jwt import JWT, jwt_required, current_identity
 
 
+# creating a class called users, part of the flask application configuration
 class User(object):
     def __init__(self, id, username, password):
         self.id = id
@@ -17,6 +18,7 @@ class User(object):
         self.password = password
 
 
+# creating a function to get all the users from the register table
 def fetch_users():
     with sqlite3.connect('practice.db') as conn:
         cursor = conn.cursor()
@@ -26,20 +28,14 @@ def fetch_users():
         new_data = []
 
         for data in users:
-            new_data.append(User(data[0], data[5], data[6]))
+            new_data.append(User(data[0], data[5], data[6])) # getting the id, username and password
     return new_data
 
 
 users = fetch_users()
 
 
-def convertToBinaryData():
-    filename = '...'# Convert digital data to binary format
-    with open(filename, 'rb') as file:
-        photo = file.read()
-    return photo
-
-
+# Creating Register Table for Users
 def user_table():
     conn = sqlite3.connect('flask_EOMP.db')
     print("Database Opened")
@@ -55,9 +51,10 @@ def user_table():
     conn.close()
 
 
+# Creating Product Table
 def product_table():
-    conn = sqlite3.connect('practice2.db')
-    conn.execute("CREATE TABLE IF NOT EXISTS product2(product_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    conn = sqlite3.connect('flask_EOMP.db')
+    conn.execute("CREATE TABLE IF NOT EXISTS product(product_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                  "product_name TEXT NOT NULL,"
                  "description TEXT NOT NULL,"
                  "price TEXT NOT NULL,"
@@ -69,10 +66,8 @@ def product_table():
 user_table()
 product_table()
 
-username_table = {u.username: u for u in users}
-userid_table = {u.id: u for u in users}
 
-
+# Code For Authorization Token
 def authenticate(username, password):
     user = username_table.get(username, None)
     if user and hmac.compare_digest(user.password.encode('utf-8'), password.encode('utf-8')):
@@ -84,29 +79,35 @@ def identity(payload):
     return userid_table.get(user_id, None)
 
 
-app = Flask(__name__)
-CORS(app)
-app.debug = True
-app.config['SECRET_KEY'] = 'super-secret'
-app.config["JWT_EXPIRATION_DELTA"] = timedelta(hours=24)
+username_table = {u.username: u for u in users}
+userid_table = {u.id: u for u in users}
 
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+
+# Flask application
+app = Flask(__name__)
+CORS(app)                                                # allows you to use api
+app.debug = True                                         # when finds a bug, it continues to run
+app.config['SECRET_KEY'] = 'super-secret'                # a random key used to encrypt your web app
+app.config["JWT_EXPIRATION_DELTA"] = timedelta(days=1)   # allows token to last a day
+
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'             # Code For Sending Emails Through Flask
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USERNAME'] = 'aslamdien90@gmail.com'
 app.config['MAIL_PASSWORD'] = 'nitrocharge'
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
-mail = Mail(app)
+mail = Mail(app)                                         # Code For Sending Emails Ends
 
 jwt = JWT(app, authenticate, identity)
 
 
-@app.route('/protected')
+@app.route('/login')
 @jwt_required()
 def protected():
     return '%s' % current_identity
 
 
+# A Route To Register A New User
 @app.route('/register/', methods=['POST'])
 def register():
     response = {}
@@ -120,45 +121,36 @@ def register():
         email = request.form['email']
         username = request.form['username']
         password = request.form['password']
+        try:
+            if re.search(regex, email) and rsaidnumber.parse(id_number):
+                with sqlite3.connect('flask_EOMP.db') as conn:
+                    cursor = conn.cursor()
+                    cursor.execute('INSERT INTO register(name,surname,id_number,email,username,password) VALUES(?,?,?,?,?,?)', (name, surname, id_number, email, username, password))
+                    conn.commit()
 
-        if re.search(regex, email):
-            try:
-                id_number = rsaidnumber.parse(id_number)
-                age = str((datetime.today() - id_number.date_of_birth) // timedelta(365.25))
+                    msg = Message('Welcome New User', sender='aslamdien90@gmail.com', recipients=[email])
+                    msg.subject = 'New User'
+                    msg.body = "Thank You for registering with us " + name + "."
+                    msg.body = "Don't forget your Username: " + username + " and Password: " + password + "."
+                    mail.send(msg)
 
-                if int(age) >= 18:
-                    with sqlite3.connect('flask_EOMP.db') as conn:
-                        cursor = conn.cursor()
-                        cursor.execute('INSERT INTO register('
-                                       'name,'
-                                       'surname,'
-                                       'id_number,'
-                                       'email,'
-                                       'username,'
-                                       'password) VALUES(?,?,?,?,?,?)', (name, surname, id_number, email, username, password))
-                        conn.commit()
+                    response['description'] = 'Registration Successful'
+                    response['status_code'] = 201
 
-                        msg = Message('Welcome To My Point Of Sale', sender='aslamdien90@gmail.com', recipients=[email])
-                        msg.subject = 'New User'
-                        msg.body = "Thank You for registering with us " + name + "."
-                        msg.body = "Don't forget your Username: " + username + " and Password: " + password + "."
-                        mail.send(msg)
-                        response['description'] = 'Registration Successful'
-                        response['status_code'] = 201
+            else:
+                response['message'] = 'Email Invalid, Please Valid Email Address'
+                response['status_code'] = 400
 
-                elif int(age) < 18:
-                        year = str(int(age) - 18)
-                        response['message']="Sorry", "Your Are Too Young to Play. Please Try Again In " + year + " Year(s)"
-                else:
-                    response['message'] = 'Email Invalid, Please Valid Email Address'
-            except ValueError:
-                if id_number != int:
-                    response['message'] = "This Is Not An ID Number"
-            return response
+        except ValueError:
+                response['message'] = "This Is Not An ID Number"
+                response['status_code'] = 400
+
+        return response
 
 
+# A Route To View All Products
 @app.route('/show-products/', methods=['GET'])
-def get_blogs():
+def view_products():
     response = {}
 
     with sqlite3.connect('practice.db') as conn:
@@ -176,6 +168,7 @@ def get_blogs():
     return jsonify(data, response)
 
 
+# A Route To Add A New Product
 @app.route('/add-product/', methods=['POST'])
 def add_product():
     response = {}
@@ -184,17 +177,21 @@ def add_product():
         product_name = request.form['product_name']
         description = request.form['description']
         price = request.form['price']
-        product_image = request.files['product_image']
+        product_image = request.form['product_image']
 
         with sqlite3.connect('flask_EOMP.db') as conn:
             cursor = conn.cursor()
-            cursor.execute('INSERT INTO product2(product_name, description, price, product_image) VALUES(?,?,?,?)', (product_name, description, str('R') + price, product_image))
+            cursor.execute('INSERT INTO product(product_name,'
+                           'description,'
+                           'price,'
+                           'product_image) VALUES(?,?,?,?)', (product_name, description, str('R') + price, product_image))
             conn.commit()
             response['status_code'] = 201
             response['description'] = 'New Product Has Been Added'
-        return response
+    return response
 
 
+# A Route to View A Specific Products
 @app.route('/view-product/<int:product_id>', methods=['GET'])
 def view_product(product_id):
     response = {}
@@ -210,19 +207,21 @@ def view_product(product_id):
     return jsonify(response)
 
 
+# A Route To Edit A Specific Product
 @app.route('/edit-product/<int:product_id>', methods=['PUT'])
+@jwt_required()
 def edit_product(product_id):
     response = {}
 
     if request.method == 'PUT':
-        with sqlite3.connect('practice.db') as conn:
+        with sqlite3.connect('flask_EOMP.db') as conn:
             incoming_data = dict(request.json)
             put_data = {}
 
             if incoming_data.get('product_name') is not None:
                 put_data['product_name'] = incoming_data.get('product_name')
 
-                with sqlite3.connect('practice.db') as conn:
+                with sqlite3.connect('flask_EOMP.db') as conn:
                     cursor = conn.cursor()
                     cursor.execute('UPDATE product SET product_name =? WHERE product_id=?',
                                    (put_data['product_name'], product_id))
@@ -233,7 +232,7 @@ def edit_product(product_id):
             if incoming_data.get('description') is not None:
                 put_data['description'] = incoming_data.get('description')
 
-                with sqlite3.connect('practice.db') as conn:
+                with sqlite3.connect('flask_EOMP.db') as conn:
                     cursor = conn.cursor()
                     cursor.execute('UPDATE product SET description =? WHERE product_id=?',
                                    (put_data['description'], product_id))
@@ -244,9 +243,9 @@ def edit_product(product_id):
             if incoming_data.get('price') is not None:
                 put_data['price'] = incoming_data.get('price')
 
-                with sqlite3.connect('practice.db') as conn:
+                with sqlite3.connect('flask_EOMP.db') as conn:
                     cursor = conn.cursor()
-                    cursor.execute('UPDATE product SET price =? WHERE product_id=?', (put_data['price'], product_id))
+                    cursor.execute('UPDATE product SET price =? WHERE product_id=?', (str('R') + put_data['price'], product_id))
                     conn.commit()
                     response['message'] = 'Product Price Updated Successfully'
                     response['status_code'] = 200
@@ -254,21 +253,23 @@ def edit_product(product_id):
             if incoming_data.get('product_image') is not None:
                 put_data['product_image'] = incoming_data.get('product_image')
 
-                with sqlite3.connect('practice.db') as conn:
+                with sqlite3.connect('flask_EOMP.db') as conn:
                     cursor = conn.cursor()
                     cursor.execute('UPDATE product SET product_image =? WHERE product_id=?',
                                    (put_data['product_image'], product_id))
                     conn.commit()
                     response['message'] = 'Product Image Updated Successfully'
                     response['status_code'] = 200
-    return response
+        return response
 
 
+# a route to delete products
 @app.route('/delete-product/<int:product_id>')
+@jwt_required()
 def delete_product(product_id):
     response = {}
 
-    with sqlite3.connect('practice.db') as conn:
+    with sqlite3.connect('practice1.db') as conn:
         cursor = conn.cursor()
         cursor.execute('DELETE FROM product WHERE product_id=' + str(product_id))
         conn.commit()
