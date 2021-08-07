@@ -170,6 +170,7 @@ def view_products():
 
 # A Route To Add A New Product
 @app.route('/add-product/', methods=['POST'])
+@jwt_required()
 def add_product():
     response = {}
 
