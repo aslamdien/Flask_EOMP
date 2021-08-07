@@ -2,7 +2,6 @@ import hmac
 import sqlite3
 from datetime import datetime, timedelta
 import re
-import rsaidnumber
 
 from flask_cors import CORS
 from flask_mail import Mail, Message
@@ -122,7 +121,7 @@ def register():
         username = request.form['username']
         password = request.form['password']
         try:
-            if re.search(regex, email) and rsaidnumber.parse(id_number):
+            if re.search(regex, email):
                 with sqlite3.connect('flask_EOMP.db') as conn:
                     cursor = conn.cursor()
                     cursor.execute('INSERT INTO register(name,surname,id_number,email,username,password) VALUES(?,?,?,?,?,?)', (name, surname, id_number, email, username, password))
@@ -142,6 +141,7 @@ def register():
                 response['status_code'] = 400
 
         except ValueError:
+            if len(id_number) != 13:
                 response['message'] = "This Is Not An ID Number"
                 response['status_code'] = 400
 
