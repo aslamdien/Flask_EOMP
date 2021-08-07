@@ -19,15 +19,15 @@ class User(object):
 
 # creating a function to get all the users from the register table
 def fetch_users():
-    with sqlite3.connect('practice.db') as conn:
+    with sqlite3.connect('flask_EOMP.db') as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM register')
+        cursor.execute('SELECT * FROM users')
         users = cursor.fetchall()
 
         new_data = []
 
         for data in users:
-            new_data.append(User(data[0], data[5], data[6])) # getting the id, username and password
+            new_data.append(User(data[0], data[4], data[5])) # getting the id, username and password
     return new_data
 
 
@@ -39,14 +39,13 @@ def user_table():
     conn = sqlite3.connect('flask_EOMP.db')
     print("Database Opened")
 
-    conn.execute("CREATE TABLE IF NOT EXISTS register(user_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    conn.execute("CREATE TABLE IF NOT EXISTS users(user_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                  "name TEXT NOT NULL,"
                  "surname TEXT NOT NULL,"
-                 "id_number INTEGER NOT NULL,"
                  "email TEXT NOT NULL,"
                  "username TEXT NOT NULL,"
                  "password TEXT NOT NULL)")
-    print("register table created")
+    print("User table created")
     conn.close()
 
 
@@ -116,7 +115,6 @@ def register():
     if request.method == 'POST':
         name = request.form['name']
         surname = request.form['surname']
-        id_number = request.form['id_number']
         email = request.form['email']
         username = request.form['username']
         password = request.form['password']
@@ -124,7 +122,7 @@ def register():
             if re.search(regex, email):
                 with sqlite3.connect('flask_EOMP.db') as conn:
                     cursor = conn.cursor()
-                    cursor.execute('INSERT INTO register(name,surname,id_number,email,username,password) VALUES(?,?,?,?,?,?)', (name, surname, id_number, email, username, password))
+                    cursor.execute('INSERT INTO users(name,surname,email,username,password) VALUES(?,?,?,?,?,?)', (name, surname, email, username, password))
                     conn.commit()
 
                     msg = Message('Welcome New User', sender='aslamdien90@gmail.com', recipients=[email])
@@ -136,15 +134,9 @@ def register():
                     response['description'] = 'Registration Successful'
                     response['status_code'] = 201
 
-            else:
+        except:
                 response['message'] = 'Email Invalid, Please Valid Email Address'
                 response['status_code'] = 400
-
-        except ValueError:
-            if len(id_number) != 13:
-                response['message'] = "This Is Not An ID Number"
-                response['status_code'] = 400
-
         return response
 
 
@@ -153,7 +145,7 @@ def register():
 def view_products():
     response = {}
 
-    with sqlite3.connect('practice.db') as conn:
+    with sqlite3.connect('flask_EOMP..db') as conn:
         cursor = conn.cursor()
         cursor.row_factory = sqlite3.Row
         cursor.execute('SELECT * FROM product')
@@ -197,7 +189,7 @@ def add_product():
 def view_product(product_id):
     response = {}
 
-    with sqlite3.connect('practice.db') as conn:
+    with sqlite3.connect('flask_EOMP.db') as conn:
         cursor = conn.cursor()
         cursor.execute('SELECT * FROM product WHERE product_id=' + str(product_id))
 
@@ -270,7 +262,7 @@ def edit_product(product_id):
 def delete_product(product_id):
     response = {}
 
-    with sqlite3.connect('practice1.db') as conn:
+    with sqlite3.connect('flask_EOMP.db') as conn:
         cursor = conn.cursor()
         cursor.execute('DELETE FROM product WHERE product_id=' + str(product_id))
         conn.commit()
