@@ -150,7 +150,7 @@ def register():
 def view_products():
     response = {}
 
-    with sqlite3.connect('flask_EOMP..db') as conn:
+    with sqlite3.connect('flask_EOMP.db') as conn:
         cursor = conn.cursor()
         cursor.row_factory = sqlite3.Row
         cursor.execute('SELECT * FROM product')
