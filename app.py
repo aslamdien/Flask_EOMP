@@ -101,7 +101,7 @@ mail = Mail(app)                                         # Code For Sending Emai
 jwt = JWT(app, authenticate, identity)
 
 
-@app.route('/login')
+@app.route('/protected')
 @jwt_required()
 def protected():
     return '%s' % current_identity
