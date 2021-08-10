@@ -2,6 +2,7 @@ import hmac
 import sqlite3
 from datetime import datetime, timedelta
 import re
+import rsaidnumber
 
 from flask_cors import CORS
 from flask_mail import Mail, Message
@@ -21,13 +22,13 @@ class User(object):
 def fetch_users():
     with sqlite3.connect('flask_EOMP.db') as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM users')
+        cursor.execute('SELECT * FROM register')
         users = cursor.fetchall()
 
         new_data = []
 
         for data in users:
-            new_data.append(User(data[0], data[4], data[5])) # getting the id, username and password
+            new_data.append(User(data[0], data[5], data[6])) # getting the id, username and password
     return new_data
 
 
@@ -39,9 +40,10 @@ def user_table():
     conn = sqlite3.connect('flask_EOMP.db')
     print("Database Opened")
 
-    conn.execute("CREATE TABLE IF NOT EXISTS users(user_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    conn.execute("CREATE TABLE IF NOT EXISTS register(user_id INTEGER PRIMARY KEY AUTOINCREMENT,"
                  "name TEXT NOT NULL,"
                  "surname TEXT NOT NULL,"
+                 "id_number INTEGER NOT NULL,"
                  "email TEXT NOT NULL,"
                  "username TEXT NOT NULL,"
                  "password TEXT NOT NULL)")
@@ -115,14 +117,15 @@ def register():
     if request.method == 'POST':
         name = request.form['name']
         surname = request.form['surname']
+        id_number = request.form['id_number']
         email = request.form['email']
         username = request.form['username']
         password = request.form['password']
         try:
-            if re.search(regex, email):
+            if re.search(regex, email) and rsaidnumber.parse(id_number):
                 with sqlite3.connect('flask_EOMP.db') as conn:
                     cursor = conn.cursor()
-                    cursor.execute('INSERT INTO users(name,surname,email,username,password) VALUES(?,?,?,?,?,?)', (name, surname, email, username, password))
+                    cursor.execute('INSERT INTO register(name,surname,email,username,password) VALUES(?,?,?,?,?,?)', (name, surname, email, username, password))
                     conn.commit()
 
                     msg = Message('Welcome New User', sender='aslamdien90@gmail.com', recipients=[email])
@@ -133,8 +136,10 @@ def register():
 
                     response['description'] = 'Registration Successful'
                     response['status_code'] = 201
+            else:
+                response['message'] = "Invalid Email Address"
 
-        except:
+        except ValueError:
                 response['message'] = 'Email Invalid, Please Valid Email Address'
                 response['status_code'] = 400
         return response
@@ -170,7 +175,7 @@ def add_product():
         product_name = request.form['product_name']
         description = request.form['description']
         price = request.form['price']
-        product_image = request.form['product_image']
+        product_image = request.files['product_image']
 
         with sqlite3.connect('flask_EOMP.db') as conn:
             cursor = conn.cursor()
