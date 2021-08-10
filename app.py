@@ -111,16 +111,15 @@ def protected():
 @app.route('/register/', methods=['POST'])
 def register():
     response = {}
-
     regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
 
     if request.method == 'POST':
-        name = request.form['name']
-        surname = request.form['surname']
-        id_number = request.form['id_number']
-        email = request.form['email']
-        username = request.form['username']
-        password = request.form['password']
+        name = request.json['name']
+        surname = request.json['surname']
+        id_number = request.json['id_number']
+        email = request.json['email']
+        username = request.json['username']
+        password = request.json['password']
         try:
             if re.search(regex, email) and rsaidnumber.parse(id_number):
                 with sqlite3.connect('flask_EOMP.db') as conn:
@@ -172,17 +171,17 @@ def add_product():
     response = {}
 
     if request.method == 'POST':
-        product_name = request.form['product_name']
-        description = request.form['description']
-        price = request.form['price']
-        product_image = request.files['product_image']
+        product_name = request.json['product_name']
+        description = request.json['description']
+        price = request.json['price']
+        product_image = request.json['product_image']
 
         with sqlite3.connect('flask_EOMP.db') as conn:
             cursor = conn.cursor()
             cursor.execute('INSERT INTO product(product_name,'
                            'description,'
                            'price,'
-                           'product_image) VALUES(?,?,?,?)', (product_name, description, str('R') + price, product_image))
+                           'product_image) VALUES(?,?,?,?)', (product_name, description,price, product_image))
             conn.commit()
             response['status_code'] = 201
             response['description'] = 'New Product Has Been Added'
