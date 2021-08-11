@@ -124,7 +124,7 @@ def register():
             if re.search(regex, email) and rsaidnumber.parse(id_number):
                 with sqlite3.connect('flask_EOMP.db') as conn:
                     cursor = conn.cursor()
-                    cursor.execute('INSERT INTO register(name,surname,email,username,password) VALUES(?,?,?,?,?,?)', (name, surname, email, username, password))
+                    cursor.execute('INSERT INTO register(name,surname,id_number, email,username,password) VALUES(?,?,?,?,?,?)', (name, surname,id_number, email, username, password))
                     conn.commit()
 
                     msg = Message('Welcome New User', sender='aslamdien90@gmail.com', recipients=[email])
