@@ -151,11 +151,16 @@ def view_products():
 
     with sqlite3.connect('flask_EOMP.db') as conn:
         cursor = conn.cursor()
+        cursor.row_factory = sqlite3.Row
         cursor.execute('SELECT * FROM product')
 
         product = cursor.fetchall()
+        data = []
 
-    response['data'] = product
+        for i in product:
+            data.append({u: i[u] for u in i.keys()})
+
+    response['data'] = data
     return jsonify(response)
 
 
