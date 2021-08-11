@@ -3,6 +3,8 @@ import sqlite3
 from datetime import datetime, timedelta
 import re
 import rsaidnumber
+import cloudinary
+import cloudinary.uploader
 
 from flask_cors import CORS
 from flask_mail import Mail, Message
@@ -65,6 +67,23 @@ def product_table():
 
 user_table()
 product_table()
+
+
+# function to take image uploads and convert them into urls
+def upload_file():
+    app.logger.info('in upload route')
+    cloudinary.config(cloud_name = "dbcczql4w",
+                      api_key = "138784466689969",
+                      api_secret = "Nw8Wv4yVQaFk7I8gu1PHt2OcPxQ"
+                      )
+    upload_result = None
+    if request.method == 'POST' or request.method == 'PUT':
+        product_image = request.files['product_image']
+        app.logger.info('%s file_to_upload', product_image)
+        if product_image:
+            upload_result = cloudinary.uploader.upload(product_image)
+            app.logger.info(upload_result)
+            return upload_result['url']
 
 
 # Code For Authorization Token
@@ -141,7 +160,7 @@ def register():
         except ValueError:
                 response['message'] = 'Email Invalid, Please Valid Email Address'
                 response['status_code'] = 400
-        return response
+    return response
 
 
 # A Route To View All Products
@@ -171,17 +190,16 @@ def add_product():
     response = {}
 
     if request.method == 'POST':
-        product_name = request.json['product_name']
-        description = request.json['description']
-        price = request.json['price']
-        product_image = request.json['product_image']
+        product_name = request.form['product_name']
+        description = request.form['description']
+        price = request.form['price']
 
         with sqlite3.connect('flask_EOMP.db') as conn:
             cursor = conn.cursor()
             cursor.execute('INSERT INTO product(product_name,'
                            'description,'
                            'price,'
-                           'product_image) VALUES(?,?,?,?)', (product_name, description, price, product_image))
+                           'product_image) VALUES(?,?,?,?)', (product_name, description, price, upload_file()))
             conn.commit()
             response['status_code'] = 201
             response['description'] = 'New Product Has Been Added'
@@ -248,7 +266,7 @@ def edit_product(product_id):
                     response['status_code'] = 200
 
             if incoming_data.get('product_image') is not None:
-                put_data['product_image'] = incoming_data.get('product_image')
+                put_data['product_image'] = upload_file()
 
                 with sqlite3.connect('flask_EOMP.db') as conn:
                     cursor = conn.cursor()
