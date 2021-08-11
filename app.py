@@ -161,7 +161,8 @@ def view_products():
             data.append({u: i[u] for u in i.keys()})
 
     response['status_code'] = 200
-    return jsonify(data, response)
+    response['data'] = data
+    return jsonify(response)
 
 
 # A Route To Add A New Product
