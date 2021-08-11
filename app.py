@@ -181,7 +181,7 @@ def add_product():
             cursor.execute('INSERT INTO product(product_name,'
                            'description,'
                            'price,'
-                           'product_image) VALUES(?,?,?,?)', (product_name, description,price, product_image))
+                           'product_image) VALUES(?,?,?,?)', (product_name, description, price, product_image))
             conn.commit()
             response['status_code'] = 201
             response['description'] = 'New Product Has Been Added'
