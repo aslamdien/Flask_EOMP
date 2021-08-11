@@ -160,7 +160,6 @@ def view_products():
         for i in product:
             data.append({u: i[u] for u in i.keys()})
 
-    response['status_code'] = 200
     response['data'] = data
     return jsonify(response)
 
