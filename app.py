@@ -242,7 +242,7 @@ def edit_product(product_id):
 
                 with sqlite3.connect('flask_EOMP.db') as conn:
                     cursor = conn.cursor()
-                    cursor.execute('UPDATE product SET price =? WHERE product_id=?', (str('R') + put_data['price'], product_id))
+                    cursor.execute('UPDATE product SET price =? WHERE product_id=?', (put_data['price'], product_id))
                     conn.commit()
                     response['message'] = 'Product Price Updated Successfully'
                     response['status_code'] = 200
