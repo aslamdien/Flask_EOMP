@@ -187,13 +187,14 @@ def details():
                 cursor.execute("SELECT * FROM register WHERE email='" + str(email) + "'")
                 details = cursor.fetchall()[0]
 
-            msg = Message('Password Reset', sender='081698work@gmail.com', recipients=[email])
-            msg.body = "Here Is Your Information" + str(details[0]) + ". Username: " + str(details[4]) + ", Password: " + str(details[5])
-            msg.body = "Don`t Lost It Again"
-            mail.send(msg)
+                msg = Message('Password Information', sender='081698work@gmail.com', recipients=[email])
+                msg.body = "Here Is Your Information" + str(details[0]) + ". Username: " + str(details[4]) + ", Password: " + str(details[5])
+                msg.body = "Don`t Lost It Again"
+                mail.send(msg)
 
-            response["message"] = "Success, Check Email"
-            response["status_code"] = 201
+                response["message"] = "Success, Check Email"
+                response["status_code"] = 201
+                return redirect('https://jovial-roentgen-31a32e.netlify.app/')
 
         else:
             response['message'] = "Invalid Email Address"
