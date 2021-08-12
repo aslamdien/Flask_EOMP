@@ -179,13 +179,17 @@ def show_users():
 
     with sqlite3.connect("flask_EOMP.db") as conn:
         cursor = conn.cursor()
+        cursor.row_factory = sqlite3.Row
         cursor.execute("SELECT * FROM register")
 
-        posts = cursor.fetchall()
+        people = cursor.fetchall()
+        data = []
 
-    response['status_code'] = 200
-    response['data'] = posts
-    return response
+        for i in people:
+            data.append({u: i[u] for u in i.keys()})
+
+    response['data'] = data
+    return jsonify(response)
 
 
 # a route to view a user
