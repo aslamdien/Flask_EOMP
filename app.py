@@ -10,7 +10,7 @@ from flask_cors import CORS
 from flask_mail import Mail, Message
 from flask import Flask, request, jsonify
 from flask_jwt import JWT, jwt_required, current_identity
-
+from werkzeug.utils import redirect
 
 # creating a class called users, part of the flask application configuration
 class User(object):
@@ -154,7 +154,6 @@ def register():
                                    'password) VALUES(?,?,?,?,?,?)', (name, surname, id_number, email, username, password))
                     conn.commit()
 
-
                     msg = Message('Welcome New User', sender='081698work@gmail.com', recipients=[email])
                     msg.subject = 'New User'
                     msg.body = "Thank You for registering with us " + name + "."
@@ -163,6 +162,7 @@ def register():
 
                     response['description'] = 'Registration Successful'
                     response['status_code'] = 201
+                    return redirect('https://jovial-roentgen-31a32e.netlify.app/')
 
             else:
                 response['message'] = "Invalid Email Address"
@@ -170,6 +170,34 @@ def register():
         except ValueError:
             response['message'] = "ID Number Invalid"
         return response
+
+
+# a route with a function to send the users their details
+@app.route('/reset-password/', methods=["POST"])
+def details():
+    response = {}
+
+    if request.method == "POST":
+        email = request.form['email']
+
+        regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+        if re.search(regex, email):
+            with sqlite3.connect("flask_EOMP.db") as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT * FROM register WHERE email='" + str(email) + "'")
+                details = cursor.fetchall()[0]
+
+            msg = Message('Password Reset', sender='081698work@gmail.com', recipients=[email])
+            msg.body = "Here Is Your Information" + str(details[0]) + ". Username: " + str(details[4]) + ", Password: " + str(details[5])
+            msg.body = "Don`t Lost It Again"
+            mail.send(msg)
+
+            response["message"] = "Success, Check Email"
+            response["status_code"] = 201
+
+        else:
+            response['message'] = "Invalid Email Address"
+    return response
 
 
 # a route to view all the Registered users
