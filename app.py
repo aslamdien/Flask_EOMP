@@ -317,6 +317,82 @@ def edit_product(product_id):
         return response
 
 
+@app.route('/edit-user/<username>', methods=['PUT'])
+def edit_user(username):
+    response = {}
+
+    if request.method == 'PUT':
+        with sqlite3.connect('flask_EOMP.db') as conn:
+            incoming_data = dict(request.json)
+            put_data = {}
+
+            if incoming_data.get('name') is not None:
+                put_data['name'] = incoming_data.get('name')
+
+                with sqlite3.connect('flask_EOMP.db') as conn:
+                    cursor = conn.cursor()
+                    cursor.execute('UPDATE register SET name =? WHERE username=?',
+                                   (put_data['name'], username))
+                    conn.commit()
+                    response['message'] = 'Name Updated Successfully'
+                    response['status_code'] = 200
+
+            if incoming_data.get('surname') is not None:
+                put_data['surname'] = incoming_data.get('surname')
+
+                with sqlite3.connect('flask_EOMP.db') as conn:
+                    cursor = conn.cursor()
+                    cursor.execute('UPDATE product SET surname =? WHERE username=?',
+                                   (put_data['surname'], username))
+                    conn.commit()
+                    response['message'] = 'Surname Updated Successfully'
+                    response['status_code'] = 200
+
+            if incoming_data.get('id_number') is not None:
+                put_data['id_number'] = incoming_data.get('id_number')
+
+                with sqlite3.connect('flask_EOMP.db') as conn:
+                    cursor = conn.cursor()
+                    cursor.execute('UPDATE register SET id_number =? WHERE username=?', (put_data['id_number'], username))
+                    conn.commit()
+                    response['message'] = 'ID Number Updated Successfully'
+                    response['status_code'] = 200
+
+            if incoming_data.get('email') is not None:
+                put_data['email'] = incoming_data.get('email')
+
+                with sqlite3.connect('flask_EOMP.db') as conn:
+                    cursor = conn.cursor()
+                    cursor.execute('UPDATE register SET email =? WHERE username=?',
+                                   (put_data['email'], username))
+                    conn.commit()
+                    response['message'] = 'Email Address Updated Successfully'
+                    response['status_code'] = 200
+
+            if incoming_data.get('username') is not None:
+                put_data['username'] = incoming_data.get('username')
+
+                with sqlite3.connect('flask_EOMP.db') as conn:
+                    cursor = conn.cursor()
+                    cursor.execute('UPDATE register SET username=? WHERE username=?',
+                                   (put_data['username'], username))
+                    conn.commit()
+                    response['message'] = 'username Updated Successfully'
+                    response['status_code'] = 200
+
+            if incoming_data.get('password') is not None:
+                put_data['password'] = incoming_data.get('email')
+
+                with sqlite3.connect('flask_EOMP.db') as conn:
+                    cursor = conn.cursor()
+                    cursor.execute('UPDATE register SET password =? WHERE username=?',
+                                   (put_data['password'], username))
+                    conn.commit()
+                    response['message'] = 'password Updated Successfully'
+                    response['status_code'] = 200
+        return response
+
+
 # a route to delete products
 @app.route('/delete-product/<int:product_id>')
 @jwt_required()
