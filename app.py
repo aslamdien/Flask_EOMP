@@ -133,12 +133,13 @@ def register():
     regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
 
     if request.method == 'POST':
-        name = request.form['name']
-        surname = request.form['surname']
-        id_number = request.form['id_number']
-        email = request.form['email']
-        username = request.form['username']
-        password = request.form['password']
+        name = request.json['name']
+        surname = request.json['surname']
+        id_number = request.json['id_number']
+        email = request.json['email']
+        username = request.json['username']
+        password = request.json['password']
+
         try:
             if re.search(regex, email) and rsaidnumber.parse(id_number):
                 with sqlite3.connect('flask_EOMP.db') as conn:
@@ -148,7 +149,7 @@ def register():
                                    'surname,'
                                    'id_number,'
                                    'email,'
-                                   'username, '
+                                   'username,'
                                    'password) VALUES(?,?,?,?,?,?)', (name, surname, id_number, email, username, password))
                     conn.commit()
 
