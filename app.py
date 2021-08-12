@@ -21,20 +21,6 @@ class User(object):
 
 
 # creating a function to get all the users from the register table
-def fetch_users():
-    with sqlite3.connect('flask_EOMP.db') as conn:
-        cursor = conn.cursor()
-        cursor.execute('SELECT * FROM register')
-        users = cursor.fetchall()
-
-        new_data = []
-
-        for data in users:
-            new_data.append(User(data[0], data[5], data[6])) # getting the id, username and password
-    return new_data
-
-
-users = fetch_users()
 
 
 # Creating Register Table for Users
@@ -42,12 +28,12 @@ def user_table():
     conn = sqlite3.connect('flask_EOMP.db')
     print("Database Opened")
 
-    conn.execute("CREATE TABLE IF NOT EXISTS register(user_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+    conn.execute("CREATE TABLE IF NOT EXISTS register("
                  "name TEXT NOT NULL,"
                  "surname TEXT NOT NULL,"
                  "id_number INTEGER NOT NULL,"
                  "email TEXT NOT NULL,"
-                 "username TEXT NOT NULL,"
+                 "username TEXT NOT NULL PRIMARY KEY,"
                  "password TEXT NOT NULL)")
     print("User table created")
     conn.close()
@@ -64,6 +50,21 @@ def product_table():
     print('Product table Created')
     conn.close()
 
+
+def fetch_users():
+    with sqlite3.connect('flask_EOMP.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM register')
+        users = cursor.fetchall()
+
+        new_data = []
+
+        for data in users:
+            new_data.append(User(data[2], data[4], data[5])) # getting the id, username and password
+    return new_data
+
+
+users = fetch_users()
 
 user_table()
 product_table()
@@ -111,8 +112,8 @@ app.config["JWT_EXPIRATION_DELTA"] = timedelta(days=1)   # allows token to last 
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'             # Code For Sending Emails Through Flask
 app.config['MAIL_PORT'] = 465
-app.config['MAIL_USERNAME'] = 'aslamdien90@gmail.com'
-app.config['MAIL_PASSWORD'] = 'nitrocharge'
+app.config['MAIL_USERNAME'] = '081698work@gmail.com'
+app.config['MAIL_PASSWORD'] = 'open@123'
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail = Mail(app)                                         # Code For Sending Emails Ends
@@ -153,7 +154,8 @@ def register():
                                    'password) VALUES(?,?,?,?,?,?)', (name, surname, id_number, email, username, password))
                     conn.commit()
 
-                    msg = Message('Welcome New User', sender='aslamdien90@gmail.com', recipients=[email])
+
+                    msg = Message('Welcome New User', sender='081698work@gmail.com', recipients=[email])
                     msg.subject = 'New User'
                     msg.body = "Thank You for registering with us " + name + "."
                     msg.body = "Don't forget your Username: " + username + " and Password: " + password + "."
@@ -161,12 +163,43 @@ def register():
 
                     response['description'] = 'Registration Successful'
                     response['status_code'] = 201
+
             else:
                 response['message'] = "Invalid Email Address"
 
         except ValueError:
-                response['message'] = "ID Number Invalid"
+            response['message'] = "ID Number Invalid"
         return response
+
+
+# a route to view all the Registered users
+@app.route('/show-users/', methods=["GET"])
+def show_users():
+    response = {}
+
+    with sqlite3.connect("flask_EOMP.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM register")
+
+        posts = cursor.fetchall()
+
+    response['status_code'] = 200
+    response['data'] = posts
+    return response
+
+
+# a route to view a user
+@app.route('/view-user/<int:user_id>', methods=["GET"])
+@jwt_required()
+def view_user(user_id):
+    response = {}
+    with sqlite3.connect('flask_EOMP.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM register WHERE user_id='" + str(user_id) + "'")
+        response["status_code"] = 200
+        response["description"] = "User retrieved successfully"
+        response["data"] = cursor.fetchone()
+    return jsonify(response)
 
 
 # A Route To View All Products
@@ -296,6 +329,19 @@ def delete_product(product_id):
         conn.commit()
         response['status_code'] = 204
         response['message'] = 'Product Has Been Deleted'
+    return response
+
+
+@app.route('/delete-user/<username>')
+def delete_user(username):
+    response = {}
+
+    with sqlite3.connect('flask_EOMP.db') as conn:
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM register WHERE username=' + str(username))
+        conn.commit()
+        response['status_code'] = 200
+        response['message'] = 'User Has Been Deleted'
     return response
 
 
