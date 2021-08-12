@@ -130,7 +130,7 @@ def protected():
 @app.route('/register/', methods=['POST'])
 def register():
     response = {}
-    regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+
 
     if request.method == 'POST':
         name = request.json['name']
@@ -141,6 +141,7 @@ def register():
         password = request.json['password']
 
         try:
+            regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
             if re.search(regex, email) and rsaidnumber.parse(id_number):
                 with sqlite3.connect('flask_EOMP.db') as conn:
                     cursor = conn.cursor()
