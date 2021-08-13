@@ -80,7 +80,7 @@ def upload_file():
                       )
     upload_result = None
     if request.method == 'POST' or request.method == 'PUT':
-        product_image = request.files['product_image']
+        product_image = request.json['product_image']
         app.logger.info('%s file_to_upload', product_image)
         if product_image:
             upload_result = cloudinary.uploader.upload(product_image)
@@ -258,7 +258,6 @@ def view_products():
 
 # A Route To Add A New Product
 @app.route('/add-product/', methods=['POST'])
-#@jwt_required()
 def add_product():
     response = {}
 
@@ -266,13 +265,14 @@ def add_product():
         product_name = request.json['product_name']
         description = request.json['description']
         price = request.json['price']
+        product_image = upload_file()
 
         with sqlite3.connect('flask_EOMP.db') as conn:
             cursor = conn.cursor()
             cursor.execute('INSERT INTO product(product_name,'
                            'description,'
                            'price,'
-                           'product_image) VALUES(?,?,?,?)', (product_name, description, price, upload_file()))
+                           'product_image) VALUES(?,?,?,?)', (product_name, description, price, product_image))
             conn.commit()
             response['status_code'] = 201
             response['description'] = 'New Product Has Been Added'
