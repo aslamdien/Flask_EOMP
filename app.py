@@ -224,7 +224,7 @@ def show_users():
 
 # a route to view a user
 @app.route('/view-user/<int:user_id>', methods=["GET"])
-@jwt_required()
+#@jwt_required()
 def view_user(user_id):
     response = {}
     with sqlite3.connect('flask_EOMP.db') as conn:
@@ -258,7 +258,7 @@ def view_products():
 
 # A Route To Add A New Product
 @app.route('/add-product/', methods=['POST'])
-@jwt_required()
+#@jwt_required()
 def add_product():
     response = {}
 
@@ -297,7 +297,7 @@ def view_product(product_id):
 
 # A Route To Edit A Specific Product
 @app.route('/edit-product/<int:product_id>', methods=['PUT'])
-@jwt_required()
+#@jwt_required()
 def edit_product(product_id):
     response = {}
 
@@ -429,7 +429,7 @@ def edit_user(username):
 
 # a route to delete products
 @app.route('/delete-product/<int:product_id>')
-@jwt_required()
+#@jwt_required()
 def delete_product(product_id):
     response = {}
 
