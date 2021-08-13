@@ -12,6 +12,7 @@ from flask import Flask, request, jsonify
 from flask_jwt import JWT, jwt_required, current_identity
 from werkzeug.utils import redirect
 
+
 # creating a class called users, part of the flask application configuration
 class User(object):
     def __init__(self, id, username, password):
@@ -262,9 +263,9 @@ def add_product():
     response = {}
 
     if request.method == 'POST':
-        product_name = request.form['product_name']
-        description = request.form['description']
-        price = request.form['price']
+        product_name = request.json['product_name']
+        description = request.json['description']
+        price = request.json['price']
 
         with sqlite3.connect('flask_EOMP.db') as conn:
             cursor = conn.cursor()
