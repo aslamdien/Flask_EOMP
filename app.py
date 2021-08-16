@@ -106,7 +106,7 @@ userid_table = {u.id: u for u in users}
 
 # Flask application
 app = Flask(__name__)
-CORS(app)                                                # allows you to use api
+CORS(app, resources={r"/*": {"origins": "*"}})           # allows you to use api
 app.debug = True                                         # when finds a bug, it continues to run
 app.config['SECRET_KEY'] = 'super-secret'                # a random key used to encrypt your web app
 app.config["JWT_EXPIRATION_DELTA"] = timedelta(days=1)   # allows token to last a day
@@ -118,6 +118,8 @@ app.config['MAIL_PASSWORD'] = 'open@123'
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail = Mail(app)                                         # Code For Sending Emails Ends
+app.config['TESTING'] = True
+app.config['CORS_HEADERS'] = ['Content-Type']
 
 jwt = JWT(app, authenticate, identity)
 
