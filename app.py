@@ -165,7 +165,6 @@ def register():
 
                     response['description'] = 'Registration Successful'
                     response['status_code'] = 201
-                    return redirect('https://jovial-roentgen-31a32e.netlify.app/')
 
             else:
                 response['message'] = "Invalid Email Address"
@@ -429,9 +428,9 @@ def edit_user(username):
         return response
 
 
-# a route to delete products
+# A Route to delete products
 @app.route('/delete-product/<int:product_id>')
-#@jwt_required()
+# @jwt_required()
 def delete_product(product_id):
     response = {}
 
