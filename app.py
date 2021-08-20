@@ -165,11 +165,12 @@ def register():
 
                     response['description'] = 'Registration Successful'
                     response['status_code'] = 201
-                return redirect('https://jovial-roentgen-31a32e.netlify.app/')
+                    global users
+                    users = fetch_users()
+                return response
 
             else:
                 response['message'] = "Invalid Email Address"
-
         except ValueError:
             response['message'] = "ID Number Invalid"
         return response
