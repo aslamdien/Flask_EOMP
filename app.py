@@ -165,9 +165,12 @@ def register():
 
                     response['description'] = 'Registration Successful'
                     response['status_code'] = 201
+<<<<<<< HEAD
                     global users
                     users = fetch_users()
                 return response
+=======
+>>>>>>> 336b4f4b7dad5878298cb2cf235b4fc59e50adf4
 
             else:
                 response['message'] = "Invalid Email Address"
