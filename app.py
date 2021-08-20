@@ -192,13 +192,12 @@ def details():
                 details = cursor.fetchall()[0]
 
                 msg = Message('Password Information', sender='081698work@gmail.com', recipients=[email])
-                msg.body = "Here Is Your Information" + str(details[0]) + ". Username: " + str(details[4]) + ", Password: " + str(details[5])
-                msg.body = "Don`t Lost It Again"
+                msg.body = "Here Is Your Information " + str(details[0]) + ". \nUsername: " + str(details[4]) + "\nPassword: " + str(details[5]) + '\n Don`t Lose It Again!!'
+
                 mail.send(msg)
 
                 response["message"] = "Success, Check Email"
                 response["status_code"] = 201
-                return redirect('https://stormy-forest-82724.herokuapp.com')
 
         else:
             response['message'] = "Invalid Email Address"
