@@ -167,6 +167,7 @@ def register():
                     response['status_code'] = 201
                     global users
                     users = fetch_users()
+                    return redirect('https://stormy-forest-82724.herokuapp.com')
 
             else:
                 response['message'] = "Invalid Email Address"
@@ -197,7 +198,7 @@ def details():
 
                 response["message"] = "Success, Check Email"
                 response["status_code"] = 201
-                return redirect('https://jovial-roentgen-31a32e.netlify.app/')
+                return redirect('https://stormy-forest-82724.herokuapp.com')
 
         else:
             response['message'] = "Invalid Email Address"
