@@ -187,18 +187,16 @@ def details():
                 cursor = conn.cursor()
                 cursor.execute("SELECT * FROM register WHERE email='" + str(email) + "'")
                 details = cursor.fetchall()[0]
+                conn.commit()
 
                 msg = Message('Password Information', sender='081698work@gmail.com', recipients=[email])
                 msg.body = "Here Is Your Information " + str(details[0]) + ". \nUsername: " + str(details[4]) + "\nPassword: " + str(details[5]) + '\n Don`t Lose It Again!!'
-
                 mail.send(msg)
 
                 response["message"] = "Success, Check Email"
                 response["status_code"] = 201
-
         else:
             response['message'] = "Invalid Email Address"
-
     return response
 
 
