@@ -110,7 +110,6 @@ CORS(app, resources={r"/*": {"origins": "*"}})           # allows you to use api
 app.debug = True                                         # when finds a bug, it continues to run
 app.config['SECRET_KEY'] = 'super-secret'                # a random key used to encrypt your web app
 app.config["JWT_EXPIRATION_DELTA"] = timedelta(days=1)   # allows token to last a day
-
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'             # Code For Sending Emails Through Flask
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USERNAME'] = '081698work@gmail.com'
@@ -162,12 +161,8 @@ def register():
                     msg.body = "Thank You for registering with us " + name + "."
                     msg.body = "Don't forget your Username: " + username + " and Password: " + password + "."
                     mail.send(msg)
-
                     response['description'] = 'Registration Successful'
                     response['status_code'] = 201
-                    global users
-                    users = fetch_users()
-                    return redirect('https://stormy-forest-82724.herokuapp.com')
 
             else:
                 response['message'] = "Invalid Email Address"
@@ -201,6 +196,7 @@ def details():
 
         else:
             response['message'] = "Invalid Email Address"
+
     return response
 
 
@@ -299,7 +295,6 @@ def view_product(product_id):
 
 # A Route To Edit A Specific Product
 @app.route('/edit-product/<int:product_id>', methods=['PUT'])
-#@jwt_required()
 def edit_product(product_id):
     response = {}
 
@@ -417,7 +412,7 @@ def edit_user(username):
                     response['status_code'] = 200
 
             if incoming_data.get('password') is not None:
-                put_data['password'] = incoming_data.get('email')
+                put_data['password'] = incoming_data.get('password')
 
                 with sqlite3.connect('flask_EOMP.db') as conn:
                     cursor = conn.cursor()
@@ -450,9 +445,9 @@ def delete_user(username):
 
     with sqlite3.connect('flask_EOMP.db') as conn:
         cursor = conn.cursor()
-        cursor.execute('DELETE FROM register WHERE username=' + str(username))
+        cursor.execute("DELETE FROM register WHERE username='" + str(username) + "'")
         conn.commit()
-        response['status_code'] = 200
+        response['status_code'] = 204
         response['message'] = 'User Has Been Deleted'
     return response
 
