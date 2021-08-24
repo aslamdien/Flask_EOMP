@@ -163,12 +163,14 @@ def register():
                     mail.send(msg)
                     response['description'] = 'Registration Successful'
                     response['status_code'] = 201
+                    return response
 
             else:
                 response['message'] = "Invalid Email Address"
+                return response
         except ValueError:
             response['message'] = "ID Number Invalid"
-        return response
+            return response
 
 
 # a route with a function to send the users their details
